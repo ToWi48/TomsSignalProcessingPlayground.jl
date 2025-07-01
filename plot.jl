@@ -12,8 +12,6 @@ f_lo = 1
 s_lo = exp.(im*2*pi*f_lo*t.+deg2rad(p_lo))
 s_lo_spec = fftshift(1 / length(s_lo) * fft(s_lo))
 
-s_lo_shifted = s_lo .- sin.(2*pi*f_lo*t.+deg2rad(p_lo))
-
 plot_time = plot(
     [
         scatter(x=t, y=real(s_lo), name="Signal (Real)"), 
