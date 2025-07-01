@@ -46,7 +46,7 @@ f_rf_img = f_lo-f_if+1
 s_rf_img = cos.(2*pi*f_rf_img*t.+deg2rad(p_rf_img))
 s_rf_img_spec = fftshift(1 / length(s_rf_img) * fft(s_rf_img))
 
-s_in = s_rf# + s_rf_img
+s_in = s_rf #+ s_rf_img
 
 # plot results
 plot_time = plot(
@@ -157,11 +157,13 @@ plot_direct_freq = plot(
 ########################################################
 
 # Inphase path
-s_i_mixed = s_in .* s_lo    # s_lo = cosine
+s_i_mixed = 2 * s_in .* s_lo    # s_lo = cosine
+s_i_mixed = Lowpass(s_i_mixed, f_rf+1, Fs)
 s_i_mixed_spec = fftshift(1 / length(s_i_mixed) * fft(s_i_mixed))
 
 # Quadratur path
-s_q_mixed = s_in .* real(Hilbert(s_lo) .* exp(im * deg2rad(90)))    # s_lo = -sin
+s_q_mixed = 2 * s_in .* real(Hilbert(s_lo) .* exp(im * deg2rad(90)))    # s_lo = -sin
+s_q_mixed = Lowpass(s_q_mixed, f_rf+1, Fs)
 s_q_mixed_spec = fftshift(1 / length(s_q_mixed) * fft(s_q_mixed))
 
 s_iq_out = s_i_mixed + s_q_mixed * im
@@ -170,9 +172,8 @@ s_iq_out_spec = fftshift(1 / length(s_iq_out) * fft(s_iq_out))
 # plot results
 plot_iq_freq = plot(
     [
-        #scatter(x=Fs/N*(-N/2:N/2-1), y=abs.(s_i_mixed_spec), name="IQ Inphase"),
-        #scatter(x=Fs/N*(-N/2:N/2-1), y=abs.(s_q_mixed_spec), name="IQ Quadratur"),
-        scatter3d(x=Fs/N*(-N/2:N/2-1), y=abs.(s_iq_out_spec), z=abs.(s_iq_out_spec), name="IQ out", mode="lines"), 
+        scatter3d(x=x=Fs/N*(-N/2:N/2-1), y=1/N*real(fftshift(fft(s_i_mixed))), z = zeros(N), name="Inphase", mode="lines"), 
+        scatter3d(x=x=Fs/N*(-N/2:N/2-1), y=zeros(N), z=1/N*imag(fftshift(fft(s_q_mixed))), name="Quadratur", mode="lines"),
     ],
     Layout(
         title="IQ Demodulator",
@@ -187,13 +188,25 @@ plot_iq_freq = plot(
     )
 )
 
+plot_iq_spec = plot(
+    [
+        scatter(x=Fs/N*(-N/2:N/2-1), y=abs.(s_iq_out_spec), name="Signal"), 
+    ], 
+    Layout(
+        title="Demodulatorausgangssignal Spec",
+        xaxis_title="Frequency (Hz)",
+        yaxis_title="Amplitude",
+        yaxis=attr(range=[0, 1])
+    )
+)
+
 ########################################################
 # Plotting
 ########################################################
 
 fig = [
     plot_time plot_freq plot_hartley_freq plot_direct_freq;
-    plot_iq_freq
+    plot_iq_freq plot_iq_spec
 ]
 relayout!(fig)
 
